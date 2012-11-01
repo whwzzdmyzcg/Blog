@@ -1,0 +1,16 @@
+"=========== Meta ============
+"StrID : 3095
+"Title : [转]Failed to connect to FTP Server localhost:21
+"Slug  : %e8%bd%acfailed-to-connect-to-ftp-server-localhost21
+"Cats  : Wordpress
+"Tags  : 
+"=============================
+"EditType   : post
+"EditFormat : Markdown
+"BlogAddr   : http://www.fangze.info/
+"========== Content ==========
+[From](http://www.jorble.com/2011/12/wordpress-solution-failed-to-connect-to-ftp-server-localhost21/)
+Wordpress(3.3) on Ubuntu Linux需要owner:group为www-data:www-data
+
+* cd /PATH/TO/WORDPRESS/
+* sudo chown -R www-data:www-data *

@@ -1,0 +1,15 @@
+"=========== Meta ============
+"StrID : 2911
+"Title : Wiki
+"Slug  : wiki
+"Cats  : Uncategorized
+"Tags  : 
+"=============================
+"EditType   : post
+"EditFormat : Markdown
+"BlogAddr   : http://www.fangze.info/
+"========== Content ==========
+== 求数组的子数组之和的最大值 ==
+=== 问题描述 ===
+一个有N个整数元素的一维数组A[0],A[1],...,A[n-2],A[n-1]，问子数组之和的最大值是多少。
+

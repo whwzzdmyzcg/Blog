@@ -1,0 +1,62 @@
+"=========== Meta ============
+"StrID : 3086
+"Title : Big and Little Endian
+"Slug  : big-and-little-endian
+"Cats  : Algorithm
+"Tags  : 
+"=============================
+"EditType   : post
+"EditFormat : Markdown
+"BlogAddr   : http://www.fangze.info/
+"========== Content ==========
+### 判断低位优先和高位优先 ###
+**方法一**
+	
+	// big endian返回false，little endian返回true
+	bool big_or_little(void)
+	{
+		int x = 0x1;
+		char *p = &x;
+
+		if (1 == *p)
+			return true;
+		else
+			return false;
+	}
+**方法二**
+	
+	// big endian返回false，little endian返回true
+	typedef union
+	{
+		char c;
+		int a;
+	}U;
+	bool big_or_little(void)
+	{
+		U u;
+		u.a = 1;
+		if (1 == u.c)
+			return true;
+		else
+			return false;
+	}
+### 应用 ###
+改变一个整数的存储格式，如低位优先存储改为高位优先存储，或反之。
+	
+	// @x:待改变存储格式的整数
+	int chgendian(int x)
+	{
+		int tmp = 0;
+		char *p = (char *)&x;
+		int shift = sizeof(int)*8 - 8; // 第一个字节移动的位数
+
+		for (int i = 0; i < sizeof(int); i++)
+		{
+			// 依次将4个字节左移24位，16位，8位，0位
+			tmp |= *p<<shift;
+			shift -= 8;
+			p++;
+		}
+
+		return tmp;
+	}

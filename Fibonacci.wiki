@@ -1,0 +1,244 @@
+"=========== Meta ============
+"StrID : 3066
+"Title : Fibonacci
+"Slug  : fibonacci
+"Cats  : Algorithm
+"Tags  : Fibonacci
+"=============================
+"EditType   : post
+"EditFormat : Markdown
+"BlogAddr   : http://www.fangze.info/
+"========== Content ==========
+[参考1](http://www.cnblogs.com/xwdreamer/archive/2012/05/15/2501606.html)
+[参考2](http://blog.linjian.org/articles/fibonacci-essay/)
+### 递推关系定义
+* F(n) = 0, if n = 0;
+* F(n) = 1, if n = 1;
+* F(n) = F(n-1) + F(n-2), if n > 1;
+### 递归法
+	int Fibonacci(int n)
+	{
+		if (n <= 0)
+			return 0;
+		else if (n == 1)
+			return 1;
+		else
+			return Fibonacci(n-1) + Fibonacci(n-2);
+	}
+代码量更少
+
+	int Fibonacci(int n)
+	{
+		return (n>=2 && (Fibonacci(n-1) + Fibonacci(n-2))) || n;
+	}
+缺点：存在大量重复计算，时间复杂度是n的指数级O(2<sup>n</sup>)。
+### 循环取代递归
+	int Fibonacci(int n)
+	{
+		if (n <= 0)
+			return 0;
+		else if (n == 1)
+			return 1;
+		else
+		{
+			int *array = new int[n+1];
+			array[0] = 0;
+			array[1] = 1;
+			for (int i = 2; i <= n; i++)
+				array[i] = array[i-1] + array[i-2];
+			int result = array[n];
+			// 动态分配的数组会一直存在，直到显式释放为止
+			delete [] array;
+			return result;
+		}
+	}
+空间换时间：时间复杂度O(n)，空间复杂度O(n)。
+### 转移矩阵法
+#### 分析
+该方法常见于线性代数的Markov过程示例。
+
+Fibonacci数列是二阶递推数列，所以存在一个2*2的矩阵A，使得(F<sub>n</sub> F<sub>n-1</sub>) = (F<sub>n-1</sub> F<sub>n-2</sub>)\*A
+
+求解可得A = (1,1;1,0)
+
+即有(F<sub>n</sub> F<sub>n-1</sub>) = (F<sub>n-1</sub> F<sub>n-2</sbu>)\*A = (F<sub>n-2</sub> F<sub>n-3</sub>)\*A<sup>2</sup> = ... = (F<sub>1</sub> F<sub>0</sub>)\*A<sup>n-1</sup>
+
+所以问题转化为求解矩阵A的方幂。
+
+	Class Matrix;	// 假设已有实现了乘法操作的矩阵类
+	Matrix MatrixPow(const Matrix &m, int n)
+	{
+		Matrix result = Matrix::Indentity;	// 赋初值为单位矩阵
+		Matrix tmp = m;
+		for (; n; n >>= 1)
+		{
+			if (n & 1)
+				result *= tmp;
+			tmp *= tmp;
+		}
+		return Matrix;
+	}
+	int Fibonacci(int n)
+	{
+		Matrix an = MatrixPow(A, n-1);
+		return F1*an(0,0) + F0*an(1,0);
+	}
+时间复杂度O(log<sub>2</sub>n)。
+### 迭代法
+上一个方法中保存了每一个中间变量，但实际上没有必要保存每一个中间变量，只需要保存两个临时变量即可。
+	
+	int Fibonacci(int n)
+	{
+		if (n <= 0)
+			return 0;
+		else if (n == 1)
+			return 1;
+		else
+		{
+			//n>=2时，初始化pre=f(0)=0,post=f(1)=1,f(n)=0
+			int pre = 0;
+			int post = 1;
+			int fn = 0;
+			// 循环计算Fibonacci数列，用临时变量pre和post保存中间结果，避免重复计算
+			for (int i = 2; i <= n; i++)
+			{
+				fn = pre + post;
+				pre = post;
+				post = fn;
+			}
+			return fn;
+		}
+	}
+时间复杂度O(n)，空间复杂度O(1)。
+### 通项公式法
+略
+### 模板元编程法
+不能算算法，只是用到了C++编程技巧。
+
+通常在C+++中使用模板，仅限于类模板与函数模板。但实际上C++支持模板元编程，理论上可以在编译时执行任何计算(甚至包含选择、循环、递归等结构)。
+	
+	#define Fib(N) FibT<N>::Val
+	template<int n> struct FibT
+	{
+		enum
+		{
+			Val = FibT<n - 1>::Val + FibT<n - 2>::Val
+		};
+	};
+	template<> struct FibT<0>
+	{
+		enum
+		{
+			Val = 0
+		};
+	};
+	template<> struct FibT<1>
+	{
+		enum
+		{
+			Val = 1
+		};
+	};
+用一个结构体作为模板的载体，用一个枚举值保存运算结果。
+
+其中第一个模板为基本递归过程(使用递归算法是为了说明的简便，完全可以用其它算法替代，以加速编译过程)，后两个模板为n=0、1时的模板特化。
+
+通过#define语句将模板调用简写成类似函数调用的方式。程序在编译时计算所需的 Fibonacci数列项，将结果作为常量嵌入编译好的程序。运行时直接使用结果，时间复杂度真正地变成了O(1)。
+
+这一方法最大的局限就是只能对常量嵌入，程序中出现诸如计算Fib(i++)的情况则无能为力。
+
+尽管如此，这比在代码中手工计算并写入所需的值要直观准确，比通过纯粹的表驱动法“空间换时间”要方便快捷。
+### 函数对象法
+不能算算法，只是用到了C++编程技巧。
+
+主要用于C++ STL编程的通用算法方面。
+
+	class Fib
+	{
+		public:
+			Fib() : a(0), b(1), n(0)
+			{
+			}
+			unsigned long operator()()
+			{
+				if (n <= 1)
+				{
+					n++;
+					return n - 1;
+				}
+				else
+				{
+					int c;
+					c = a + b;
+					a = b;
+					b = c;
+					return c;
+				}
+			}
+		private:
+			int a, b, n;
+	};
+这个函数类对象的行为可以理解为一个“Fibonacci数列发生器”，其调用测试如下
+
+	void test(int i)
+	{
+		Fib fib;
+		do
+		{
+			cout << fib() << endl;
+		}
+		while (i--);
+	}
+函数对象具有与函数指针类似的行为，同时又能保存自身的一些属性，因此常用于STL通用算法编程。但针对单个的Fibonacci数列项求值，灵活性不如一般的方法。
+### 变形1：Frog
+#### 描述及分析
+一只青蛙一次可以跳上1级台阶，也可以跳上2级台阶，问该青蛙跳上一个n级的台阶总共有多少种跳法。
+
+该题本质是Fibonacci数列。
+ 
+* 若只有一个台阶，则只有一种跳法，即一次跳一级，f(1)=1；
+* 若有两个台阶，则第一种跳法是一次跳一级，第二种跳法是一次跳两级；
+* 若有大于两级的台阶，则假如第一次跳一级，剩下n-1级，有f(n-1)种跳法，假如第一次跳两级台阶，剩下n-2级台阶，有f(n-2)种跳法，即f(n)=f(n-1)+f(n-2)。
+### 变形2：Rectangle
+#### 描述及分析
+用2*1(2行1列)的小矩形横着或竖着去覆盖更大的矩形。问用8个2*1的小矩形无重复地覆盖一个2*8的大矩形，共有多少种方法。
+<a href="http://www.fangze.info/wp-content/uploads/2012/11/Rectangle1.png"><img title="Rectangle.png" alt="Rectangle.png" src="http://www.fangze.info/wp-content/uploads/2012/11/Rectangle1.png"class="aligncenter" /></a>
+
+该题是斐波拉契数列的变形。
+
+设f(8)表示覆盖2X8大矩形的方法总数。
+
+* 若第一个小矩形是竖着去覆盖大矩形，那么还剩下由7个2X1的小矩形组成的大矩形f(7)；
+* 若第一个小矩形是横着去覆盖大矩形，那么还剩下由6个2X1的小矩形组成的大矩形f(6)。
+* 即f(8)=f(7)+f(6)。依此类推，最后f(1)=1，f(2)=2。使用计算斐波那契数列的方法即可求出答案。
+### 扩展
+假设A(0)=1,A(1)=2,A(2)=2。对于n>2，都有A(k)=A(k-1)+A(k-2)+A(k-3)。
+
+1、对于任何一个给定的n，如何计算出A(n)？
+**采用迭代法，用三个临时变量**
+	
+	int Fib(int n)
+	{
+		if (n == 0)
+			return 1;
+		else if (n == 1 || n == 2)
+			return 2;
+		else
+		{
+			int pre = 1;
+			int post = 2;
+			int old = 2;
+			int i,An;
+			for (i = 3; i <= n; i++)
+			{
+				An = pre + post + old;
+				pre = post;
+				post = old;
+				old = An;
+			}
+			return An;
+		}
+	}
+2、对于n非常大的情况，如n=2<sup>60</sup>的时候，如何计算A(n) mod M(M<100000)呢？
+
+用矩阵转移法

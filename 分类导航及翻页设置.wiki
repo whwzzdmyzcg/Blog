@@ -1,0 +1,73 @@
+"=========== Meta ============
+"StrID : 3080
+"Title : 分类导航及翻页设置
+"Slug  : %e5%88%86%e7%b1%bb%e5%af%bc%e8%88%aa%e5%8f%8a%e7%bf%bb%e9%a1%b5%e8%ae%be%e7%bd%ae
+"Cats  : Wordpress
+"Tags  : 分类导航, 翻页
+"=============================
+"EditType   : post
+"EditFormat : Markdown
+"BlogAddr   : http://www.fangze.info/
+"========== Content ==========
+
+[参考](http://cnbabyup.com/wordpress-page-called-classification-log-pagenavi.html)
+1.复制主题目录下page.php文件并重命名(如mypage.php)，也可以自己新建一个文件
+2.在mypage.php开头添加
+
+	<?php
+	/*
+	Template Name:YOUR_TEMPLATE_NAME
+	*/
+	?>
+3.再添加如下内容
+<textarea name="code" cols="30" rows="10" readonly="true">
+	<div id="content" class="columns eight">
+		<?php
+			// showposts=每页显示的文章数目
+			// cat=类别ID
+			// category=类别名称
+			// 如果不需要翻页，仅需要这一句且不需要后面的翻页代码
+			// query_posts('showposts=10&cat=1');
+			$limit = get_option('posts_per_page');
+			$paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
+			//query_posts('cat=3&showposts=' . $limit=5 . '&paged=' . $paged);
+			query_posts('category=Linux&showposts=' . $limit=5 . '&paged=' . $paged);
+			$wp_query->is_archive = true;
+			$wp_query->is_home = false;
+			//如果在主循环前已经调用过一次query_posts，可能会出现分页无法正确指向，始终是第一页的问题。
+			// 解决方法：开始处加上
+			// <?php wp_reset_query();?>
+			// 没有添加也没出问题，不知道这个主循环是指什么。
+			
+			if ( have_posts() ) {
+				while ( have_posts() ) {
+					the_post();
+		?>
+		<div id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+			<h2 class="entry-title"><a href="<?php the_permalink() ?>"><?php the_title(); ?></a></h2>
+			<div class="entry-content">
+				<?php
+					the_excerpt();
+					wp_link_pages( array( 'before' => '<div class="page-link">' . __( 'Pages:', 'essence' ), 'after' => '</div>' ) );
+					edit_post_link( __( 'Edit', 'essence' ), '<span class="edit-link">', '</span>' );
+				?>
+			</div><!-- #entry-content -->
+		</div><!-- #post-## -->
+				<?php
+					} // end while
+				} // end if
+				?>
+		<div id="pagenavi">
+			<?php
+				if (function_exists('pagenavi'))
+					pagenavi();
+				else {
+			?>
+				<div class="alignleft"><?php next_posts_link('&laquo; Previous') ?></div>
+				<div class="alignright"><?php previous_posts_link('Next &raquo;') ?></div>
+			<?php
+					} // end else
+			?>
+		</div><!-- #pagenavi -->
+	</div><!-- #content -->
+</textarea>
