@@ -1,0 +1,78 @@
+"=========== Meta ============
+"StrID : 
+"Title : Linux下MySQL使用
+"Slug  : 
+"Cats  : Linux
+"Tags  : MySQL,LAMP
+"=============================
+"EditType   : post
+"EditFormat : Markdown
+"BlogAddr   : http://www.fangze.info
+"========== Content ==========
+[参考](http://140.129.118.16/~richwang/Database/playerinfo-96-1.html)
+命令不区分大小写，插入的内容要区分大小写，查询不区分大小写。
+列=字段=栏位=column=field
+
+$ mysql -uUSERNAME -p (这里不要输入密码以防泄漏)
+### CREATE
+mysql> CREATE DATABASE RichDB; (创建数据库RichDB)
+mysql> SHOW DATABASES; (查看MySQL中当前的数据库)
+mysql> USE RichDB; (使用数据库RichDB)
+mysql> SHOW TABLES; (查看RichDB中的表)
+mysql> CREATE TABLE playerinfo(id INT AUTO_INCREMENT, name VARCHAR(30), xpos INT, ypos INT, exp INT, PRIMARY KEY(id)); (创建表playerinfo)
+mysql> describe playerinfo; (查看表playerinfo的字段信息)
+mysql> show columns from playerinfo; (查看表playerinfo的字段信息)
+### INSERT
+mysql> insert into playerinfo VALUES(NULL, 'Jeff Henderson', 14, 35, 1431); (插入一条信息；**NULL字段由系统填**)
+mysql> select * from playerinfo; (查看表playerinfo的内容，之后做了任何改变后都可用该语句查看表的变化)
+mysql> insert into playerinfo VALUES('NULL', 'Sandra Smith', 21, 86, 4563),
+		('NULL', 'John Baker', 10, 5, 231),
+		('NULL', 'Jennifer West', 13, 73, 5400); (插入多条信息)
+### SELECT
+mysql> select name, exp from playerinfo; (查看name列和exp列)
+mysql> select exp, name from playerinfo; (查看exp列和name列，顺序变了)
+mysql> select exp AS '经验值', name AS '姓名' from playerinfo; (改变列名)
+mysql> select * from playerinfo where exp > 1000; (条件查询where exp > 1000)
+mysql> select id, name from playerinfo where ypos = 86; (条件查询where ypos = 86)
+mysql> select name, id, xpos, ypos from playerinfo where name = 'John Baker'; (条件查询where name = 'John Baker')
+mysql> select * from playerinfo where name like 'J%'; (匹配查询where name like 'J%')
+mysql> select * from playerinfo where name like '%J%'; (匹配查询where name like '%J%')
+mysql> select * from playerinfo where name like '%J'; (匹配查询where name like '%J')
+mysql> select * from playerinfo where name like '%S%' AND exp > 2000; (多条件查询where name like '%S%' AND exp > 2000)
+### ALTER
+mysql> alter table playerinfo ADD lastlogin TIMESTAMP; (新增字段lastlogin，类型为TIMESTAMP)
+mysql> alter table playerinfo MODIFY name VARCHAR(50); (改变name字段数据类型)
+### UPDATE
+mysql> update playerinfo SET lastlogin = NULL where name = 'Jeff Henderson'; (更新name为Jeff Henderson的列的lastlogin值，**lastlogin为NULL会填入当前系统时间**)
+mysql> update playerinfo SET lastlogin = '20060630140350' where name = 'Sandra Smith'; (**TIMESTAMP格式:年月日时分秒YYYYMMDDHHMMSS，不足则补零**)
+mysql> update playerinfo SET lastlogin = '20061105083014' where id >= 3;
+mysql> update playerinfo SET exp = 1000 where name like 'J%';
+mysql> update playerinfo SET exp = 500 where xpos > 10 AND xpos < 20;
+### ORDER BY
+ASC升序，默认；DESC降序
+mysql> select * from playerinfo order by name;
+mysql> select * from playerinfo order by name DESC;
+mysql> select * from playerinfo order by exp, xpos;
+mysql> select * from playerinfo order by exp DESC, xpos;
+mysql> select * from playerinfo order by exp DESC, xpos DESC;
+### Variable
+**@VarName暂存结果，供后续使用**
+mysql> select @maxid := max(id) from playerinfo;
+mysql> select * from playerinfo where id = @maxid;
+mysql> select @lastlogin := max(lastlogin) from playerinfo;
+mysql> select * from playerinfo where lastlogin = @lastlogin;
+### LIMIT
+mysql> select * from playerinfo limit 2; (**limit 0无结果显示；limit MAX+N显示所有条目，MAX为条目数，N为任意自然数；limit N显示ERROR 1064，N为负数**)
+### DELETE
+mysql> delete from playerinfo where name = 'Jeff Henderse'; (不匹配任意条目，不删除任何条目)
+mysql> delete from playerinfo where name = 'Jeff Henderson';
+mysql> delete from playerinfo where id = 3;
+mysql> delete from playerinfo; (删除所有条目；表playerinfo依然存在)
+mysql> insert into playerinfo VALUES(NULL, 'Rich Wang', 30, 40, 500, '20061201121700');
+mysql> insert into playerinfo (id, name, xpos, ypos) VALUES (NULL, '王小吉', 30, 40); (给出部分信息插入新列)
+### ALTER
+mysql> alter table playerinfo change exp expValue INT; (修改列名exp为expValue，类型为INT)
+mysql> alter table playerinfo drop column expValue; (删除列expValue)
+mysql> alter table playerinfo rename to byetable; (修改表名为byetable)
+### DROP
+mysql> drop table byetable; (删除表byetable)

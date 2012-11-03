@@ -1,0 +1,333 @@
+"=========== Meta ============
+"StrID : 3098
+"Title : LAMP安装配置
+"Slug  : lamp%e5%ae%89%e8%a3%85%e9%85%8d%e7%bd%ae-2
+"Cats  : Linux, Wordpress
+"Tags  : Apache, MySQL, PHP
+"=============================
+"EditType   : post
+"EditFormat : Markdown
+"BlogAddr   : http://www.fangze.info
+"========== Content ==========
+
+[参考](http://blog.chinaunix.net/uid-25324849-id-3209316.html)
+[参考](http://wiki.ubuntu.org.cn/MySQL%E5%AE%89%E8%A3%85%E6%8C%87%E5%8D%97)
+[参考](http://wiki.ubuntu.org.cn/MySQL)
+[参考](http://wiki.ubuntu.org.cn/Quick_HOWTO_:_Ch34_:_Basic_MySQL_Configuration/zh)
+[参考](http://forum.ubuntu.org.cn/viewtopic.php?f=44&amp;t=20348)
+[参考](http://farlee.info/archives/linux-ubuntu-lamp-apache-mysql-php-phpmyadmin-install-configuration.html)
+
+环境 = Ubuntu10.04
+LAMP = Linux+Apache+MySQL+PHP/Perl/Python
+进行各种配置后，都要重启对应的服务。
+
+### Apache
+安装 - $ sudo apt-get install apache2
+测试 - 在浏览器中打开[http://localhost](http://localhost) 表示安装成功。
+配置文件 - $ sudo vim /etc/apache2/apache2.conf
+
+启用mod_rewrite模块 - $ sudo a2enmod rewrite
+重启Apache - $ sudo /etc/init.d/apache2 restart
+
+设置Apache支持.htm,.html,.php
+$ sudo vim /etc/apache2/apache2.conf
+or $ sudo vim /etc/apache2/mods-enabled/php5.conf
+添加：
+AddType application/x-httpd-php .php .htm .html
+重启Apache - $ sudo /etc/init.d/apache2 restart
+
+### PHP
+安装 - $ sudo apt-get install php5
+测试 - $ sudo vim /var/www/testphp.php
+写入
+
+	<?php
+	phpinfo(); // PHP配置信息，这个很有用，可以看配置情况
+	?>
+重启Apache - $ sudo /etc/init.d/apache2 restart
+在浏览器中打开[http://localhost/testphp.php](http://localhost/testphp.php)
+若能看到PHP配置信息，表示安装PHP5成功。删除testphp.php文件。
+
+中文网页显示乱码
+$ sudo vim /etc/apache2/apache2.conf
+添加：
+AddDefaultCharset UTF-8
+重启Apache
+
+配置文件 - $ sudo vim /etc/php5/apache2/php.ini
+
+**PHP CGI** - $ sudo /var/www/cgi-bin/
+
+PHP网络服务器根目录默认位置/var/www，默认只允许root用户操作，修改其读写权限：
+$ sudo chmod 777 /var/www
+
+### MySQL
+安装 - $ sudo apt-get install mysql-server mysql-client (客户端用来测试数据库连接并用来访问数据库服务器--包括本地服务器；其实选择了mysql-server会自动安装mysql-client)
+
+启停
+
+* $ sudo start mysql (手动启动)
+* $ sudo stop mysql (手动停止)
+* $ sudo service mysql start
+* $ sudo /etc/init.d/mysql start
+* $ sudo service mysql stop
+* $ sudo /etc/init.d/mysql stop
+* $ sudo service mysql restart
+* $ sudo /etc/init.d/mysql restart
+
+检测 - pgrep mysqld (检查mysqld进程是否已经开启，若已开启，该命令返回进程ID)
+
+MySQL默认只允许本机(127.0.0.1)连接，修改配置my.cnf：
+$ sudo vim /etc/mysql/my.cnf
+注释掉语句“bind-address = 127.0.0.1”
+
+MySQL的所有用户名和密码都保存在一个名为mysql的数据库中，新建的用户也会保存在这里。
+MySQL默认没有设置root密码(管理员密码，安装过程中会询问是否设置管理员密码)，本机的root用户也没有密码，修改配置(Not OK)：
+$ mysqladmin -u root PASSWORD newpassword
+$ mysqladmin -h root@local-machine-name -u root -p PASSWORD newpassword
+重启MySQL - $ sudo /etc/init.d/mysql restart
+
+安装MySQL Administrator - $ sudo apt-get install mysql-admin
+位置 - Gnome-->应用程序-->Programming-->MySQL Administrator
+
+安装MySQL for Apache HTTP Server：
+
+* $ sudo apt-get install libapache2-mod-auth-mysql
+* $ sudo apt-get install php5-mysql (将PHP和MySQL连接起来)
+* $ sudo apt-get install phpmyadmin(安装时会有一系列设置：要求选择Wev server:apache2或lighttpd，选择apache2；要求输入设置的MySQL数据库管理员密码，管理员root，密码Rachel)
+数据库管理员：Rachel
+MySQL application PASSWORD for phpmyadmin：Rachel
+之后出了问题，但选择了继续安装。
+
+连接phpmyadmin与apache2：
+www目录在/var/www，phpmyadmin目录在/usr/share/phpmyadmin
+$ sudo ln -s /usr/share/phpmyadmin /var/www
+
+让PHP和MySQL一起工作，编辑：
+$ sudo vim /etc/php5/apache2/php.ini
+取消对;extension=mysql.so的注释。
+重启apache
+测试phpmyadmin - [http://localhost/phpmyadmin](http://localhost/phpmyadmin)
+
+测试MySQL - 在/var/www目录下新建testmysql.php
+	
+	<?php
+		$link = mysql_connect("localhost", "root", "Rachel");
+		if (!$link)
+		{
+			die('Could not connect:' . mysql_error());
+		}
+		else
+			echo "MySQL已经正确配置";
+		mysql_close($link);
+	?>
+重启Apache
+测试 - [http://localhost/testmysql.php](http://localhost/testmysql.php)
+
+配置文件/etc/mysql/my.cnf解释
+* 
+* datadir = /var/lib/mysql (指定数据文件存放路径)
+
+#### MySQL简单操作
+* $ mysql -uroot -p (以root用户身份进入MySQL CLI-命令行编译器)
+
+	+ mysql> show databases; (显示当前用户权限可见的数据库)
+	+ mysql> create database XXX; (创建数据库XXX)
+	+ mysql> use XXX; (进入数据库XXX环境)
+	+ mysql> show tables; (显示数据库XXX中的所有表)
+	+ mysql> describe YYY; (显示表YYY的结构，结构即字段构成、属性等内容)
+	+ mysql> select * from YYY limit 1; (查看表YYY的第1行的内容)
+	+ mysql> drop database XXX; (删除数据库XXX)
+	+ mysql> grant all privileges on XXX.* to USERNAME@"servername" identified by 'PASSWORD'; (赋予用户USERNAME访问数据库XXX的权力)
+	+ mysql> flush privileges; (将权限变更写入数据库mysql.sql)
+	+ mysql> exit; (退出MySQL CLI环境)
+	
+* 若删除数据库后show databases;仍然能看到被删除的数据库，则说明数据库目录中存在残留文件-停止MySQL服务，手动删除/var/lib/mysql下对应数据库的目录。
+* $ mysql -uUSERNAME -p XXX < create_mysql.script (把脚本文件内容导入到数据库XXX中，即生成数据库表；要求XXX必须已经创建好)
+* $ mysql -uUSERNAME -p XXX (以用户USERNAME身份查看数据库XXX)
+* $ mysqldump --add-drop-table -uUSERNAME -pPASSWORD XXX > backup_file (备份数据库XXX，可以只备份某一个数据库；记得备份mysql数据库)
+* $ mysql -uUSERNAME -pPASSWORD XXX < backup_file (从备份中恢复数据库XXX)
+* mysql> use XXX;
+* mysql> SELECT * INTO OUTFILE 'backup_file_for_table1' FROM table1; (把数据库XXX中的表table1备份到文件backup_file_for_table1中)
+* mysql> SELECT * INTO OUTFILE 'backup_file_for_table2' FROM table2; (把数据库XXX中的表table2备份到文件backup_file_for_table2中)
+* mysql> use XXX-new; (新数据库XXX-new)
+* mysql> load data infile 'backup_file_for_table1' replace into table table1; (把文件backup_file_for_table1恢复到数据库XXX-new中的表table1)
+* mysql> load data infile 'backup_file_for_table2' replace into table table2; (把文件backup_file_for_table2恢复到数据库XXX-new中的表table2)
+* replace命令会覆盖原表中key值相同的记录，若换成ignore则只会写入不同key值的记录(The REPLACE directive will overwrite any previously existing records with the same unique, or primary, key in the source and destination tables. The IGNORE directive will only insert records where the primary keys are different.)
+
+#### 基础的MySQL网络安全
+$ netstat -an | grep 3306 (查看端口监听信息)
+tcp 0 0 0.0.0.0:3306 0.0.0.0:* LISTEN
+有问题：把数据库完全暴露给了来自网络的查询。
+如果只想让数据库被服务器自己访问，则
+$ sudo vim /etc/mysql/my.cnf
+uncomment bind-address=127.0.0.1
+重启MySQL
+$ netstat -an | grep 3306 (查看端口监听信息)
+tcp 0 0 127.0.0.1:3306 0.0.0.0:* LISTEN
+
+### 问题
+$ mysqladmin -uroot PASSWORD newpassword
+$ mysqladmin -h root@local-machine-name -uroot -pPASSWORD newpassword
+出现：mysqladmin: connect to server at 'localhost' failed
+[解决]
+[参考](http://www.mmcat.cn/2011/09/mysqladmin-connect-to-server-at-localhost-failed%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%81/)
+$ sudo /etc/init.d/mysql stop 停止mysql服务
+$ sudo mysqld_safe --skip-grant-tables & 以安全模式启动mysql
+$ sudo mysql -uroot -p 提示输入密码时直接Enter
+进入mysql
+mysql> use mysql;
+mysql> update user set password=password("PASS") where user='root' and host='localhost';
+mysql> flush privileges;
+mysql> quit
+$ sudo /etc/init.d/mysql restart 正常启动
+解决了这个问题之后，可以登录了http://localhost/phpmyadmin
+$ mysql -uroot -p 验证设置是否成功，提示输入密码时输入刚才设置的密码PASS
+-uroot或-u root皆可，即空格与否没有关系；但-p和password之间不能有空格
+
+### 问题
+Apache启动时显示：Could not reliably determine the server’s fully qualified domain name, using 127.0.1.1 for ServerName
+[解决]
+$ sudo vim /etc/apache2/apache2.conf
+添加：
+ServerName 127.0.0.1
+重启Apache
+
+### 问题
+用root用户登录后出现：
+1)Connection for controluser as defined in your configuration failed.
+2)The additional features for working with linked tables have been deactivated
+[解决]
+看了网上诸多建议，总结如下：
+创建数据库phpmyadmin
+把文件create_tables.sql(不知道为什么安装后没有这个文件，本地搜了一下，在以前的资料中找到一个，就拿来用了)写入数据库phmyadmin中( mysql -uroot -p phpmyadmin < create_tables.sql)；这里，create_tables.sql文件中没有pma_tracking的表，自己仿照前面的表写了一个。
+创建用户phpmyadmin并赋予其对数据库phpmyadmin完全的权限
+修改/etc/phpmyadmin/config.inc.php的内容(取消很多注释并添加tracking项)
+－－config.inc.php内容－－
+
+	<?php
+	/**
+	 * Debian local configuration file
+	 *
+	 * This file overrides the settings made by phpMyAdmin interactive setup
+	 * utility.
+	 *
+	 * For example configuration see /usr/share/doc/phpmyadmin/examples/config.default.php.gz
+	 *
+	 * NOTE: do not add security sensitive data to this file (like passwords)
+	 * unless you really know what you're doing. If you do, any user that can
+	 * run PHP or CGI on your webserver will be able to read them. If you still
+	 * want to do this, make sure to properly secure the access to this file
+	 * (also on the filesystem level).
+	 */
+
+	/**
+	 * Server(s) configuration
+	 */
+	$i = 0;
+	// The $cfg['Servers'] array starts with $cfg['Servers'][1].  Do not use $cfg['Servers'][0].
+	// You can disable a server config entry by setting host to ''.
+	$i++;
+
+	/**
+	 * Read configuration from dbconfig-common
+	 * You can regenerate it using: dpkg-reconfigure -plow phpmyadmin
+	 */
+	if (is_readable('/etc/phpmyadmin/config-db.php')) {
+		require('/etc/phpmyadmin/config-db.php');
+	}
+
+	/* Configure according to dbconfig-common if enabled */
+	if (!empty($dbname)) {
+		/* Authentication type */
+		$cfg['Servers'][$i]['auth_type'] = 'cookie';
+		/* Server parameters */
+		if (empty($dbserver)) $dbserver = 'localhost';
+		$cfg['Servers'][$i]['host'] = $dbserver;
+
+		if (!empty($dbport)) {
+			$cfg['Servers'][$i]['connect_type'] = 'tcp';
+			$cfg['Servers'][$i]['port'] = $dbport;
+		}
+		//$cfg['Servers'][$i]['compress'] = false;
+		/* Select mysqli if your server has it */
+		$cfg['Servers'][$i]['extension'] = 'mysqli';
+		/* Optional: User for advanced features */
+		$cfg['Servers'][$i]['controluser'] = $dbuser;
+		$cfg['Servers'][$i]['controlpass'] = $dbpass;
+		/* Optional: Advanced phpMyAdmin features */
+		$cfg['Servers'][$i]['pmadb'] = $dbname;
+		$cfg['Servers'][$i]['bookmarktable'] = 'pma_bookmark';
+		$cfg['Servers'][$i]['relation'] = 'pma_relation';
+		$cfg['Servers'][$i]['table_info'] = 'pma_table_info';
+		$cfg['Servers'][$i]['table_coords'] = 'pma_table_coords';
+		$cfg['Servers'][$i]['pdf_pages'] = 'pma_pdf_pages';
+		$cfg['Servers'][$i]['column_info'] = 'pma_column_info';
+		$cfg['Servers'][$i]['history'] = 'pma_history';
+		$cfg['Servers'][$i]['designer_coords'] = 'pma_designer_coords';
+		$cfg['Servers'][$i]['tracking'] = 'pma_tracking';
+
+		/* Uncomment the following to enable logging in to passwordless accounts,
+		 * after taking note of the associated security risks. */
+		// $cfg['Servers'][$i]['AllowNoPassword'] = TRUE;
+
+		/* Advance to next server for rest of config */
+		$i++;
+	}
+
+	/* Authentication type */
+	$cfg['Servers'][$i]['auth_type'] = 'cookie';
+	/* Server parameters */
+	$cfg['Servers'][$i]['host'] = 'localhost';
+	$cfg['Servers'][$i]['connect_type'] = 'tcp';
+	$cfg['Servers'][$i]['compress'] = false;
+	/* Select mysqli if your server has it */
+	$cfg['Servers'][$i]['extension'] = 'mysql';
+	/* Optional: User for advanced features */
+	$cfg['Servers'][$i]['controluser'] = 'pma';
+	$cfg['Servers'][$i]['controlpass'] = 'pmapass';
+	/* Optional: Advanced phpMyAdmin features */
+	$cfg['Servers'][$i]['pmadb'] = 'phpmyadmin';
+	$cfg['Servers'][$i]['bookmarktable'] = 'pma_bookmark';
+	$cfg['Servers'][$i]['relation'] = 'pma_relation';
+	$cfg['Servers'][$i]['table_info'] = 'pma_table_info';
+	$cfg['Servers'][$i]['table_coords'] = 'pma_table_coords';
+	$cfg['Servers'][$i]['pdf_pages'] = 'pma_pdf_pages';
+	$cfg['Servers'][$i]['column_info'] = 'pma_column_info';
+	$cfg['Servers'][$i]['history'] = 'pma_history';
+	$cfg['Servers'][$i]['designer_coords'] = 'pma_designer_coords';
+	$cfg['Servers'][$i]['tracking'] = 'pma_tracking';
+	/* Uncomment the following to enable logging in to passwordless accounts,
+	 * after taking note of the associated security risks. */
+	// $cfg['Servers'][$i]['AllowNoPassword'] = TRUE;
+
+	/*
+	 * End of servers configuration
+	 */
+
+	/*
+	 * Directories for saving/loading files from server
+	 */
+	$cfg['UploadDir'] = '';
+	$cfg['SaveDir'] = '';
+
+
+修改权限
+$ mysql -uroot -p
+
+* mysql> create database phpmyadmin;
+* mysql> grant all privileges on phpmyadmin.* to 'phpmyadmin'@'localhost' identified by 'phpmyadmin';
+* mysql> flush privileges;
+* mysql> quit
+
+修改/etc/phpmyadmin/config-db.php的内容(修改用户名和密码等)
+$ sudo vim /etc/phpmyadmin/config-db.php
+按刚才的修改设置：
+
+	$dbuser=’phpmyadmin’;
+	$dbpass=’phpmyadmin’;
+	$basepath=”;
+	$dbname=’phpmyadmin’;
+	$dbserver=”;
+	$dbport=”;
+	$dbtype=’mysql’;
